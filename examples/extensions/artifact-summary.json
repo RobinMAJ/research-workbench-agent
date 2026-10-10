@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "artifact-summary",
+  "version": "1.0.0",
+  "skill": null,
+  "description": "Summarize scalar technical metadata from a local native manifest; no chemistry, artifact validation or scientific acceptance.",
+  "operations": ["summarize"],
+  "adapter": "python:artifact_summary:execute",
+  "parameters": {
+    "type": "object",
+    "properties": {"manifest": {"type": "string"}},
+    "required": ["manifest"],
+    "additionalProperties": false
+  },
+  "limits": {
+    "max_manifest_bytes": 1048576,
+    "scope": "Local scalar metadata summary only; no scientific validation"
+  },
+  "side_effects": ["read_local_manifest", "write_local_summary"]
+}

@@ -1,0 +1,53 @@
+{
+  "adapter": "builtin",
+  "description": "Render an embedded VESTA scene or explicit periodic structure through the installed macOS export skill and retain image-integrity evidence.",
+  "id": "vesta-figure-maker",
+  "limits": {
+    "linked_scenes": "Blocked until an explicit dependency-bundle implementation is provided.",
+    "max_timeout_seconds": 3600,
+    "platform": "macOS with /Applications/VESTA.app",
+    "scale": [
+      1,
+      8
+    ],
+    "scientific_boundary": "A nonempty raster is not visual approval or scientific validation."
+  },
+  "operations": [
+    "render"
+  ],
+  "parameters": {
+    "render": {
+      "additionalProperties": false,
+      "properties": {
+        "scale": {
+          "default": 4,
+          "maximum": 8,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "scene": {
+          "description": "Coordinator-resolved absolute input file or artifact reference.",
+          "format": "absolute-file-path",
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "scene"
+      ],
+      "type": "object"
+    }
+  },
+  "schema_version": 1,
+  "side_effects": [
+    "local_file_write",
+    "gui_application_launch"
+  ],
+  "skill": "vesta-figure-maker",
+  "version": "1.0.0"
+}

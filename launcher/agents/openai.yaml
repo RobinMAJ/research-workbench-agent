@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Workbench"
+  short_description: "Coordinate scientific skills and reproducible local runs"
+  default_prompt: "Use $research-workbench to coordinate my research request, check its inputs and execute the ready local workflow."

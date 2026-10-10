@@ -1,0 +1,143 @@
+{
+  "adapter": "builtin",
+  "description": "Build explicitly selected unrelaxed periodic geometry candidates, audit geometry, and acquire/select Materials Project crystal sources.",
+  "id": "atomistic-structure-builder",
+  "limits": {
+    "max_atoms": 2000,
+    "max_candidates": 64,
+    "max_timeout_seconds": 3600,
+    "scientific_boundary": "Geometry collision screens are not relaxation, phase confirmation or energetic acceptance.",
+    "selection": "Explicit candidate label required for build; MP retrieval remains provisional until explicit material ID selection."
+  },
+  "operations": [
+    "build",
+    "audit",
+    "mp-fetch",
+    "mp-select"
+  ],
+  "parameters": {
+    "audit": {
+      "additionalProperties": false,
+      "properties": {
+        "input": {
+          "description": "Coordinator-resolved absolute input file or artifact reference.",
+          "format": "absolute-file-path",
+          "type": "string"
+        },
+        "max_atoms": {
+          "maximum": 2000,
+          "minimum": 1,
+          "type": "integer"
+        },
+        "min_distance": {
+          "exclusiveMinimum": 0,
+          "type": "number"
+        },
+        "min_vacuum": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "radius_scale": {
+          "minimum": 0,
+          "type": "number"
+        },
+        "slab": {
+          "type": "boolean"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "input"
+      ],
+      "type": "object"
+    },
+    "build": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate": {
+          "description": "Explicit candidate label from the planned bounded enumeration; no automatic first-candidate selection.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "spec": {
+          "description": "Strict native skill request schema; input paths are resolved by the coordinator before invocation.",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "spec",
+        "candidate"
+      ],
+      "type": "object"
+    },
+    "mp-fetch": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "description": "Bounded structured MP query, excluding credentials. Only runs when MP_API_KEY is already available locally.",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "type": "object"
+    },
+    "mp-select": {
+      "additionalProperties": false,
+      "properties": {
+        "material_id": {
+          "maxLength": 64,
+          "pattern": "^mp-(?:[0-9]+|[a-z]+)$",
+          "type": "string"
+        },
+        "reason": {
+          "maxLength": 2000,
+          "minLength": 5,
+          "type": "string"
+        },
+        "source_manifest": {
+          "description": "Coordinator-resolved absolute input file or artifact reference.",
+          "format": "absolute-file-path",
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "source_manifest",
+        "material_id",
+        "reason"
+      ],
+      "type": "object"
+    }
+  },
+  "schema_version": 1,
+  "side_effects": [
+    "local_file_write",
+    "network_read_for_mp_fetch_only"
+  ],
+  "skill": "atomistic-structure-builder",
+  "version": "1.0.0"
+}

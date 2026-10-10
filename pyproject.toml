@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "research-workbench-agent"
+version = "0.1.0"
+description = "An extensible Codex research agent with audited structure, force-field and visualization workflows."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE", "NOTICE.md"]
+authors = [{name = "Jiabin Ma"}]
+
+[project.urls]
+Homepage = "https://github.com/RobinMAJ/research-workbench-agent"
+Repository = "https://github.com/RobinMAJ/research-workbench-agent"
+Issues = "https://github.com/RobinMAJ/research-workbench-agent/issues"
+
+[project.scripts]
+research-workbench = "research_workbench.cli:main"
+
+[tool.setuptools]
+packages = ["research_workbench"]
+include-package-data = false

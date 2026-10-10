@@ -1,0 +1,136 @@
+{
+  "adapter": "builtin",
+  "description": "Prepare or parameterize an explicitly identified organic molecule, audit native isolated topologies or mixture metadata, and transfer verified geometry onto an authoritative SDF graph.",
+  "id": "forcefield-generator",
+  "limits": {
+    "handoff_max_atoms": 2000,
+    "handoff_rigid_tolerance_angstrom": 0.005,
+    "max_timeout_seconds": 3600,
+    "runtime": "Existing force-field skill Python runtime; coordinator never imports RDKit/OpenMM.",
+    "scientific_boundary": "Molecular parameterization does not supply inorganic substrate or cross interactions. Mixture checks concern declared metadata only."
+  },
+  "operations": [
+    "prepare",
+    "generate",
+    "audit",
+    "audit-mixture",
+    "handoff"
+  ],
+  "parameters": {
+    "audit": {
+      "additionalProperties": false,
+      "properties": {
+        "spec": {
+          "description": "Strict native skill request schema; input paths are resolved by the coordinator before invocation.",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "spec"
+      ],
+      "type": "object"
+    },
+    "audit-mixture": {
+      "additionalProperties": false,
+      "properties": {
+        "spec": {
+          "description": "Strict native skill request schema; input paths are resolved by the coordinator before invocation.",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "spec"
+      ],
+      "type": "object"
+    },
+    "generate": {
+      "additionalProperties": false,
+      "properties": {
+        "spec": {
+          "description": "Strict native skill request schema; input paths are resolved by the coordinator before invocation.",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "spec"
+      ],
+      "type": "object"
+    },
+    "handoff": {
+      "additionalProperties": false,
+      "properties": {
+        "atom_map": {
+          "description": "Coordinator-resolved absolute input file or artifact reference.",
+          "format": "absolute-file-path",
+          "type": "string"
+        },
+        "geometry": {
+          "description": "Coordinator-resolved absolute input file or artifact reference.",
+          "format": "absolute-file-path",
+          "type": "string"
+        },
+        "graph_sdf": {
+          "description": "Coordinator-resolved absolute input file or artifact reference.",
+          "format": "absolute-file-path",
+          "type": "string"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "graph_sdf",
+        "geometry"
+      ],
+      "type": "object"
+    },
+    "prepare": {
+      "additionalProperties": false,
+      "properties": {
+        "spec": {
+          "description": "Strict native skill request schema; input paths are resolved by the coordinator before invocation.",
+          "type": "object"
+        },
+        "timeout_seconds": {
+          "description": "Native timeout request, further capped by the coordinator stage deadline.",
+          "maximum": 3600,
+          "minimum": 1,
+          "type": "integer"
+        }
+      },
+      "required": [
+        "spec"
+      ],
+      "type": "object"
+    }
+  },
+  "schema_version": 1,
+  "side_effects": [
+    "local_file_write",
+    "local_parameterization_subprocesses",
+    "semiempirical_calculation_for_explicit_am1bcc"
+  ],
+  "skill": "forcefield-generator",
+  "version": "1.0.0"
+}

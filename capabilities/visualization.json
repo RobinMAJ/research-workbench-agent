@@ -1,0 +1,41 @@
+{
+  "adapter": "builtin",
+  "description": "Collect original visualization references only after verifying native structure or molecular artifact hashes and acceptance status.",
+  "id": "visualization",
+  "limits": {
+    "collection": "References the original evidence bundle; never copies HTML alone.",
+    "max_manifest_artifacts": 20000,
+    "max_manifest_bytes": 16777216,
+    "scientific_boundary": "Collection leaves visual review and scientific acceptance pending."
+  },
+  "operations": [
+    "collect"
+  ],
+  "parameters": {
+    "collect": {
+      "additionalProperties": false,
+      "properties": {
+        "candidate": {
+          "description": "Required for structure manifests; omitted for molecular manifests.",
+          "minLength": 1,
+          "type": "string"
+        },
+        "source_manifest": {
+          "description": "Coordinator-resolved absolute input file or artifact reference.",
+          "format": "absolute-file-path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_manifest"
+      ],
+      "type": "object"
+    }
+  },
+  "schema_version": 1,
+  "side_effects": [
+    "local_file_read"
+  ],
+  "skill": null,
+  "version": "1.0.0"
+}

@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "title": "DMF molecular candidate and evidence",
+  "steps": [
+    {
+      "id": "prepare",
+      "capability": "forcefield-generator",
+      "operation": "prepare",
+      "depends_on": [],
+      "timeout_seconds": 600,
+      "params": {
+        "spec": {
+          "molecule": {
+            "smiles": "CN(C)C=O"
+          },
+          "formal_charge": 0,
+          "multiplicity": 1,
+          "backend": "gaff2",
+          "charge_method": "am1bcc",
+          "boundary": "isolated",
+          "exports": [
+            "openmm",
+            "amber",
+            "gromacs"
+          ],
+          "seed": 2026,
+          "max_atoms": 200,
+          "timeout_seconds": 300
+        }
+      }
+    },
+    {
+      "id": "parameters",
+      "capability": "forcefield-generator",
+      "operation": "generate",
+      "depends_on": [
+        "prepare"
+      ],
+      "timeout_seconds": 600,
+      "params": {
+        "spec": {
+          "molecule": {
+            "sdf": {
+              "$ref": "prepare:molecular_graph"
+            }
+          },
+          "formal_charge": 0,
+          "multiplicity": 1,
+          "backend": "gaff2",
+          "charge_method": "am1bcc",
+          "boundary": "isolated",
+          "exports": [
+            "openmm",
+            "amber",
+            "gromacs"
+          ],
+          "seed": 2026,
+          "max_atoms": 200,
+          "timeout_seconds": 300,
+          "charge_normalization": {
+            "policy": "uniform_roundoff",
+            "max_total_correction_e": 0.005,
+            "max_per_atom_correction_e": 0.0005
+          }
+        }
+      }
+    },
+    {
+      "id": "view",
+      "capability": "visualization",
+      "operation": "collect",
+      "depends_on": [
+        "parameters"
+      ],
+      "params": {
+        "source_manifest": {
+          "$ref": "parameters:manifest"
+        }
+      }
+    }
+  ]
+}
