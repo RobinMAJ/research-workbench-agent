@@ -155,3 +155,16 @@ Before registering an execution route, exercise the behavior that makes its resu
 - absence of secrets from plans, logs, shared viewers and descriptors.
 
 Document which checks are technical, which are scientific, and which remain unresolved. A descriptor's `limits` and `side_effects` are declarations; they do not automatically enforce a sandbox or validate a scientific claim. Explicit enforcement belongs in the adapter, the source skill and host permissions. Cite the source skill's actual methods, dependency versions and licenses; do not relabel another project's implementation or parameter data as original Workbench code.
+
+## Visualization routes and future adapters
+
+VESTA and VMD are built-in capabilities with separate source Skills. The Agent
+and planner select a route using [the visualization guide](visualization-routing.md);
+a typed plan still executes its declared capability. VMD scene dependencies must
+remain explicit inline `spec.inputs[].path` values so artifact references and
+coordinator source hashes cover them. Additional VMD operations such as numerical
+field plots, movie encoding or analysis require their own declared adapter
+contract before they can run as deterministic stages. They can also be handled
+through the relevant source Skill in an authorized Agent conversation. New
+research domains continue to use the same extension registry and do not need to
+modify the visualization adapter.

@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use Research Workbench Agent, please cite this software and the scientific methods and databases used in your workflow."
 type: software
 title: "Research Workbench Agent"
-version: 0.1.0
-date-released: 2026-10-11
+version: 0.2.0
+date-released: 2026-10-19
 authors:
   - family-names: Ma
     given-names: Jiabin

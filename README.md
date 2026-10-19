@@ -1,6 +1,6 @@
 # Research Workbench Agent
 
-Research Workbench coordinates scientific requests across installed skills and executes supported local workflows with typed plans, explicit artifact handoffs and recorded evidence. Its initial capabilities cover atomistic structures, molecular force fields, native VESTA exports and offline interactive 3D views. New research skills can join through a declared capability registry.
+Research Workbench coordinates scientific requests across installed skills and executes supported local workflows with typed plans, explicit artifact handoffs and recorded evidence. Its initial capabilities cover atomistic structures, molecular force fields, automatic VESTA/VMD figure routing, native exports, portable VMD scenes and offline interactive 3D views. New research skills can join through a declared capability registry.
 
 Repository and share link: [RobinMAJ/research-workbench-agent](https://github.com/RobinMAJ/research-workbench-agent).
 
@@ -35,8 +35,9 @@ Install the scientific routes you need:
 | [Atomistic Structure Builder](https://github.com/RobinMAJ/atomistic-structure-builder) | Python 3.12+; its setup script creates a skill-local virtual environment. Materials Project retrieval also needs local API access. |
 | [Force-field Generator](https://github.com/RobinMAJ/forcefield-generator) | Conda; its setup script creates a pinned Python 3.12 prefix with AmberTools/GAFF2 and OpenFF dependencies. The environment was tested on macOS arm64. |
 | [VESTA Figure Maker](https://github.com/RobinMAJ/vesta-figure-maker) | VESTA installed separately. The packaged native-export adapter supports macOS with `/Applications/VESTA.app`. |
+| [VMD Figure Studio](https://github.com/RobinMAJ/vmd-figure-studio) | Python 3.10+ and its requirements; native VMD is separately installed/licensed. Portable scene compilation and independent offline preview work without native VMD. |
 
-For a fresh installation of all three source skills:
+For a fresh installation of all four source skills:
 
 ```sh
 workbench_skills="${CODEX_HOME:-$HOME/.codex}/skills"
@@ -44,11 +45,29 @@ mkdir -p "$workbench_skills"
 git clone https://github.com/RobinMAJ/atomistic-structure-builder.git "$workbench_skills/atomistic-structure-builder"
 git clone https://github.com/RobinMAJ/forcefield-generator.git "$workbench_skills/forcefield-generator"
 git clone https://github.com/RobinMAJ/vesta-figure-maker.git "$workbench_skills/vesta-figure-maker"
+git clone https://github.com/RobinMAJ/vmd-figure-studio.git "$workbench_skills/vmd-figure-studio"
 sh "$workbench_skills/atomistic-structure-builder/scripts/setup_environment.sh"
 sh "$workbench_skills/forcefield-generator/scripts/setup_environment.sh"
+python3.12 -m venv "$workbench_skills/vmd-figure-studio/.venv"
+"$workbench_skills/vmd-figure-studio/.venv/bin/python" -m pip install \
+  -r "$workbench_skills/vmd-figure-studio/requirements.txt"
 ```
 
 If a skill is already installed, inspect and reuse it rather than cloning or replacing its environment. The structure setup includes the MP client by default; add `--without-mp` for local crystal files only. `ATOMISTIC_BUILDER_BASE_PYTHON` can select an existing Python 3.12+ base interpreter. Conda must be on `PATH`, or set `FF_GENERATOR_CONDA` to its executable. Setup downloads scientific dependencies; the Workbench installer itself does not install them. A WebGL-capable browser is needed for interactive views.
+
+If native VMD is available, configure it through the source Skill (replace the
+sample path with an actual executable or macOS app):
+
+```sh
+"$workbench_skills/vmd-figure-studio/.venv/bin/python" \
+  "$workbench_skills/vmd-figure-studio/scripts/vmd_studio.py" configure --vmd "/path/to/VMD.app"
+```
+
+Without native VMD, skip native configuration and use portable `compile` or
+independent `viewer` operations. An existing VMD Studio runtime configuration
+is reused. `VMD_STUDIO_PYTHON` selects the VMD Skill's interpreter explicitly;
+`VMD_EXECUTABLE` selects the native executable. The interpreter must have the
+source Skill's dependencies. The Workbench does not install or redistribute VMD.
 
 The bootstrap script selects an existing supported interpreter; it does not install or change Python. If the system `python3` is too old, set `RESEARCH_WORKBENCH_PYTHON` to an existing Python 3.11+ executable before installation. Alternatively, use a supported interpreter directly, for example `python3.12 scripts/install.py`. From the cloned directory, bootstrap also supports commands such as `sh scripts/bootstrap.sh doctor` and `sh scripts/bootstrap.sh capabilities`.
 
@@ -63,7 +82,7 @@ sh "${CODEX_HOME:-$HOME/.codex}/skills/research-workbench/scripts/run.sh" doctor
 sh "${CODEX_HOME:-$HOME/.codex}/skills/research-workbench/scripts/run.sh" capabilities
 ```
 
-Use your configured Codex home if it differs from `~/.codex`. The launcher probes for Python 3.11 or newer: a valid `RESEARCH_WORKBENCH_PYTHON`, versioned `python3.14` through `python3.11` on `PATH`, then `python3`, and finally the installed force-field skill's Python. It gives a clear error if none is available. The source-skill interpreter overrides `ATOMISTIC_BUILDER_PYTHON` and `FF_GENERATOR_PYTHON` select those scientific runtimes when needed. Doctor reports observed readiness; listing a capability does not establish that its tools are available or that a scientific task has run.
+Use your configured Codex home if it differs from `~/.codex`. The launcher probes for Python 3.11 or newer: a valid `RESEARCH_WORKBENCH_PYTHON`, versioned `python3.14` through `python3.11` on `PATH`, then `python3`, and finally the installed force-field skill's Python. It gives a clear error if none is available. The source-skill interpreter overrides `ATOMISTIC_BUILDER_PYTHON`, `FF_GENERATOR_PYTHON` and `VMD_STUDIO_PYTHON` select those scientific runtimes when needed. Doctor reports observed readiness; listing a capability does not establish that its tools are available or that a scientific task has run.
 
 For a standalone Python CLI distribution, build a wheel locally with an existing Python 3.11+ environment containing setuptools 77+ and wheel:
 
@@ -72,11 +91,27 @@ python3.12 -m pip wheel --no-build-isolation --no-deps --no-index \
   --wheel-dir /absolute/new-wheel-directory .
 python3.12 -m pip install --no-deps --no-index \
   --target /absolute/python-packages \
-  /absolute/new-wheel-directory/research_workbench_agent-0.1.0-py3-none-any.whl
+  /absolute/new-wheel-directory/research_workbench_agent-0.2.0-py3-none-any.whl
 PYTHONPATH=/absolute/python-packages python3.12 -m research_workbench capabilities
 ```
 
 The wheel contains the capability descriptors and Agent instructions as package resources, so the CLI works from an unrelated working directory. This installs the Python runner into the selected target; use the Codex installer above to register the custom Agent and launcher. Scientific source skills and their environments remain separate dependencies.
+
+## Update an existing installation
+
+Update the cloned repository with `git pull --ff-only`, then inspect its release
+notes and preserve your current installed launcher and Agent definition before
+running the installer again. Put backups outside the discoverable `skills/`
+directory. The installer deliberately refuses to overwrite a differing target.
+Keep external registries and source-Skill environments intact. For a staged
+check, install with `--codex-home /absolute/new-staging-home`, inspect readiness,
+and then replace only the managed Workbench launcher/Agent after preserving
+the old files. Use a new Codex session for the updated Agent definition.
+
+Do not migrate an active scientific run by swapping its coordinator code.
+Recorded runs pin coordinator and Skill fingerprints; changed code requires
+inspection and a new run rather than automatic continuation. Existing terminal
+evidence is preserved with the previous installation and its original version.
 
 ## Plan from a research request
 
@@ -169,9 +204,79 @@ This is a plan fragment; add it to a complete plan after the configured build st
 | `atomistic-structure-builder` | `build`, `audit`, `mp-fetch`, `mp-select` | Selected structure and configured geometry/export checks; database retrieval and explicit material selection. |
 | `forcefield-generator` | `prepare`, `generate`, `audit`, `audit-mixture`, `handoff` | Generation for one connected, closed-shell organic molecule; isolated native audits, supplied compatibility metadata and graph/coordinate mapping. |
 | `vesta-figure-maker` | `render` | Native export from an embedded scene or explicit periodic structure; actual visual review remains pending. |
+| `vmd-figure-studio` | `compile`, `render`, `viewer` | Inline scenes with hash-verified input bundles; verified native frames, portable unrendered scenes or independent offline viewers. |
 | `visualization` | `collect` | Hash-verified references to the source result's offline viewer and evidence bundle. |
 
 Use `capabilities` for the installed catalog and each source skill's documentation for its scientific input schema. Supplied torsion fitting and specialist workflows can also be coordinated through the relevant source skill in the Agent conversation; only operations declared by the installed execution registry can be placed in a deterministic plan.
+
+## Automatic choice between VESTA and VMD
+
+The Agent and the read-only natural-language planner select the visualization
+route from the requested scientific view and installed readiness. They record
+the chosen renderer and reason in planning assumptions. A supplied typed plan
+executes its declared route; the runner does not rewrite it.
+
+| Request | Default selection |
+| --- | --- |
+| Explicit VESTA or VMD request | Honor the requested tool; explain a missing runtime. |
+| Periodic crystals, coordination polyhedra, Miller planes, embedded VESTA scenes | VESTA |
+| Molecules/proteins, trajectories, orbitals, ESP, potential-mapped surfaces | VMD |
+| Headless rendering, consistent batches, rotation sequences | VMD |
+| Crystal density/difference-density figures | Decide from the desired representation; both tools can be appropriate. |
+| No native VMD and an interactive inspection request | Independent offline 3Dmol.js viewer |
+| No native VMD and a native VMD figure request | Prepare an authorized portable scene or report the blocked native render. |
+
+Examples for `$research-workbench` or the CLI `ask` command:
+
+> Show the coordination polyhedra and (100) plane of this crystal. Choose the
+> appropriate visualization tool and explain the choice.
+
+> Render frames 0, 20 and 40 of this supplied trajectory with one camera and
+> physical scale. Choose the suitable renderer.
+
+> Map this supplied potential onto the supplied density surface. Preserve the
+> numerical units and range, and retain the native scene and evidence.
+
+> I have no VMD installed. Deliver an offline rotatable view and a portable
+> native scene that I can render on another authorized machine later.
+
+Read [the routing and operation guide](docs/visualization-routing.md) for full
+inline VMD plan examples, field definitions, artifact handoffs and no-local-VMD
+instructions. The adapter materializes `params.spec` in a new stage directory;
+all `spec.inputs[].path` dependencies are resolved and hashed by the coordinator.
+A scene JSON filename alone is not accepted because it would hide its nested
+input dependencies from the Workbench plan.
+
+For existing workflows, a VMD input can use a declared artifact reference such
+as `{"$ref":"adsorption:geometry"}` with its correct `xyz` reader. Structure
+builder `structure` artifacts are metadata JSON, not native coordinate files;
+use its `geometry`, `structure_cif` or `poscar` artifact as appropriate. Preserve
+the complete source format and cell/topology evidence.
+
+`compile` can complete without producing a native image. A missing native VMD
+blocks `render` and retains the portable evidence instead of reporting a figure.
+`viewer` bundles the original data and local browser library, and leaves WebGL
+review pending. Native `render` exposes `figure`/`preview` only after verifying
+the source scene/input hashes and every declared rendered image. Multi-frame
+results remain together in the result bundle. Both native routes retain visual
+review and scientific acceptance as separate gates.
+
+### Runnable example without native VMD
+
+The [portable water plan](examples/workflows/vmd-portable-water.json) uses an
+included [original three-frame coordinate fixture](examples/data/README.md):
+
+```sh
+sh scripts/bootstrap.sh run --plan examples/workflows/vmd-portable-water.json \
+  --output /absolute/new-portable-water-run
+```
+
+This executes VMD Skill compilation and independent offline viewer creation,
+without launching native VMD. It needs the installed VMD source Skill and its
+Python environment. Open the returned viewer together with its local assets.
+The three frames are prescribed rigid translations, not an MD simulation.
+To request native frames on an installed VMD machine, change the first step's
+operation to `render` in a separate plan and use a fresh output directory.
 
 ## Deliverables and interpretation
 
@@ -187,7 +292,9 @@ Register a source skill as an instruction-only route, or add an explicit trusted
 
 ## Tested examples
 
-The validation record contains 91 focused tests: 35 coordinator tests, 11 planner tests using a fake CLI, 33 adapter tests and 12 extension tests. A real Codex planner also returned a ready one-step ethanol preparation plan; its deterministic execution completed preparation with scientific acceptance pending. Fake-CLI tests and a real planner invocation are distinct evidence.
+Version 0.2.0 passed 142 focused tests: 35 coordinator tests, 18 planner tests using a fake CLI, 33 existing adapter tests, 35 VMD adapter tests, 9 visualization runtime/integrity tests and 12 extension tests. A real Codex planner also returned a ready one-step ethanol preparation plan; its deterministic execution completed preparation with scientific acceptance pending. Fake-CLI tests and a real planner invocation are distinct evidence.
+
+The new VMD integration also completed a real native figure, portable scene compilation and independent offline viewer creation. With native VMD deliberately unavailable, compilation/viewer creation completed while native rendering remained blocked without a figure artifact. The included portable-water plan completed without launching native VMD. Two real read-only planner tests selected VESTA for a crystal and VMD for trajectory frames 0, 5 and 11; these were planning tests, not execution of those returned plans.
 
 The packaged DMF plan completed all three stages: molecular preparation, GAFF2 parameter generation with the requested exports, and offline-viewer collection. This establishes the reported technical workflow; scientific acceptance remains pending.
 

@@ -103,12 +103,42 @@ class PlannerBoundaryTests(unittest.TestCase):
             }],
         }
 
-    def decision(self, *, status="ready", plan=None, questions=None):
+    def visualization_plan(self, *, capability="vmd-figure-studio", operation="compile", field=False):
+        coordinates = self.workspace / "trajectory.xyz"
+        coordinates.write_text("1\nFrame 0; illustrative fixture\nH 0 0 0\n1\nFrame 1; illustrative fixture\nH 0.1 0 0\n")
+        if capability == "vesta-figure-maker":
+            crystal = self.workspace / "crystal.cif"
+            crystal.write_text("data_fixture\n_cell_length_a 4\n_cell_length_b 4\n_cell_length_c 4\n_cell_angle_alpha 90\n_cell_angle_beta 90\n_cell_angle_gamma 90\n")
+            params = {"scene": "crystal.cif", "scale": 4}
+        elif operation == "viewer":
+            params = {"input": "trajectory.xyz", "input_format": "xyz", "title": "Independent offline inspection"}
+        else:
+            spec = {
+                "schema": "vmd-figure-studio-scene-v1",
+                "title": "Illustrative trajectory visualization",
+                "inputs": [{"path": "trajectory.xyz", "type": "xyz", "role": "structure", "expected_atoms": 1}],
+                "representations": [{"style": "CPK"}],
+                "animation": {"frames": [0, 1]},
+                "output": {"width_px": 320, "height_px": 240, "format": "png", "dpi": 300},
+            }
+            if field:
+                density = self.workspace / "field.dx"
+                density.write_text("object 1 class gridpositions counts 2 2 2\norigin 0 0 0\ndelta 1 0 0\ndelta 0 1 0\ndelta 0 0 1\nobject 2 class gridconnections counts 2 2 2\nobject 3 class array type double rank 0 items 8 data follows\n0 1 0 -1 0 1 0 -1\n")
+                spec["inputs"].append({"path": "field.dx", "type": "dx", "role": "volume", "quantity": "illustrative_signed_field", "units": "arbitrary_unit"})
+                spec["surfaces"] = [{"volume": 0, "isovalue": 0.2, "units": "arbitrary_unit", "signed": True}]
+            params = {"spec": spec}
+        return {
+            "schema_version": 1, "title": "Visualization planning fixture",
+            "steps": [{"id": "figure", "capability": capability, "operation": operation,
+                       "depends_on": [], "params": params, "timeout_seconds": 600}],
+        }
+
+    def decision(self, *, status="ready", plan=None, questions=None, assumptions=None):
         return {
             "status": status,
             "plan_json": json.dumps(plan or self.ready_plan()) if status == "ready" else "",
             "questions": questions or [],
-            "assumptions": ["No parameterization or scientific validation has been performed."],
+            "assumptions": assumptions if assumptions is not None else ["No parameterization or scientific validation has been performed."],
         }
 
     def request(self, decision=None, *, behavior="normal", timeout=5, text="Prepare the supplied molecule"):
@@ -155,6 +185,80 @@ class PlannerBoundaryTests(unittest.TestCase):
         self.assertEqual(returned["questions"], decision["questions"])
         self.assertFalse((self.output / "plan.json").exists())
         self.assertEqual(json.loads((self.output / "planner-status.json").read_text())["status"], "needs_input")
+
+    def test_prompt_declares_renderer_selection_and_honest_fallback_contract(self):
+        self.request()
+        prompt = self.prompt_capture.read_text()
+        for phrase in ["explicit user request for VESTA or VMD", "not by file extension alone",
+                       "coordination polyhedra", "topology/", "potential-colored surfaces",
+                       "portable scene without VMD", "independent inspection route",
+                       "Never derive missing electron density", "chosen renderer/inspection route and the reason"]:
+            self.assertIn(phrase, prompt)
+        self.assertIn("Do not write a scene JSON file", prompt)
+        self.assertIn("spec.inputs[].path", prompt)
+        for artifact in ["scene", "compiled_manifest", "native_manifest"]:
+            self.assertIn(artifact, prompt)
+
+    def test_prompt_contains_metadata_only_visualizer_readiness(self):
+        readiness = {"vmd-figure-studio": {"native_available": False, "portable_available": True, "discovery_only": True}}
+        with mock.patch("research_workbench.vmd_runtime.visualizer_readiness", return_value=readiness) as inspect:
+            self.request()
+        inspect.assert_called_once_with(self.skills)
+        prompt = self.prompt_capture.read_text()
+        self.assertIn('"native_available": false', prompt)
+        self.assertIn("no renderer was launched", prompt)
+        self.assertIn("Metadata discovery does not prove a successful native export", prompt)
+
+    def test_crystal_vesta_plan_preserves_renderer_reason_and_normalizes_source(self):
+        plan = self.visualization_plan(capability="vesta-figure-maker", operation="render")
+        reason = "VESTA selected for a periodic crystal and coordination-polyhedron view; native availability requires verification."
+        with mock.patch.object(self.registry, "execute") as execute:
+            result = self.request(self.decision(plan=plan, assumptions=[reason]), text="Show the periodic crystal and its coordination polyhedra")
+        execute.assert_not_called()
+        normalized = json.loads((self.output / "plan.json").read_text())
+        self.assertEqual(normalized["steps"][0]["capability"], "vesta-figure-maker")
+        self.assertEqual(Path(normalized["steps"][0]["params"]["scene"]), self.workspace / "crystal.cif")
+        self.assertEqual(result["assumptions"], [reason])
+
+    def test_trajectory_vmd_plan_preserves_inline_spec_without_writing_a_scene(self):
+        plan = self.visualization_plan(operation="render")
+        reason = "VMD selected for explicit trajectory frames and a fixed camera; rendering has not run."
+        self.request(self.decision(plan=plan, assumptions=[reason]), text="Render both trajectory frames")
+        normalized = json.loads((self.output / "plan.json").read_text())
+        stage = normalized["steps"][0]
+        self.assertEqual(stage["capability"], "vmd-figure-studio")
+        self.assertIsInstance(stage["params"]["spec"], dict)
+        self.assertEqual(Path(stage["params"]["spec"]["inputs"][0]["path"]), self.workspace / "trajectory.xyz")
+        self.assertFalse((self.workspace / "scene.json").exists())
+        self.assertFalse((self.output / "scene.json").exists())
+
+    def test_signed_field_plan_keeps_quantity_units_and_threshold(self):
+        plan = self.visualization_plan(field=True)
+        self.request(self.decision(plan=plan, assumptions=["VMD portable compilation selected for signed field surfaces; no native rendering is claimed."]))
+        spec = json.loads((self.output / "plan.json").read_text())["steps"][0]["params"]["spec"]
+        self.assertEqual(Path(spec["inputs"][1]["path"]), self.workspace / "field.dx")
+        self.assertEqual(spec["inputs"][1]["quantity"], "illustrative_signed_field")
+        self.assertEqual(spec["inputs"][1]["units"], "arbitrary_unit")
+        self.assertEqual(spec["surfaces"][0], {"volume": 0, "isovalue": 0.2, "units": "arbitrary_unit", "signed": True})
+
+    def test_unavailable_vmd_can_keep_explicit_renderer_with_portable_compile(self):
+        plan = self.visualization_plan(operation="compile")
+        reason = "Explicit VMD request retained: native VMD is unavailable; compile prepares a portable unrendered scene."
+        readiness = {"vmd-figure-studio": {"native_available": False, "portable_available": True, "discovery_only": True}}
+        with mock.patch("research_workbench.vmd_runtime.visualizer_readiness", return_value=readiness):
+            result = self.request(self.decision(plan=plan, assumptions=[reason]), text="Use VMD; this machine has no VMD, so prepare the portable scene")
+        normalized = json.loads((self.output / "plan.json").read_text())
+        self.assertEqual(normalized["steps"][0]["operation"], "compile")
+        self.assertEqual(result["assumptions"], [reason])
+        self.assertFalse((self.output / "figure.png").exists())
+
+    def test_independent_viewer_plan_is_not_changed_to_a_native_render(self):
+        plan = self.visualization_plan(operation="viewer")
+        reason = "Independent offline 3Dmol.js inspection selected; this is not a native VMD or VESTA rendering."
+        self.request(self.decision(plan=plan, assumptions=[reason]), text="Make an offline inspection view without native VMD")
+        stage = json.loads((self.output / "plan.json").read_text())["steps"][0]
+        self.assertEqual(stage["operation"], "viewer")
+        self.assertEqual(Path(stage["params"]["input"]), self.workspace / "trajectory.xyz")
 
     def test_nonzero_codex_exit_retains_failure_evidence_without_plan(self):
         with self.assertRaises(WorkflowError):

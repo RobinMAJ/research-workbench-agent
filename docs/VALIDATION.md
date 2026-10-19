@@ -1,8 +1,53 @@
 # Validation record
 
-Validation began on 2026-10-10; final integration and extension checks completed on 2026-10-11. This record concerns technical integration, not scientific acceptance.
+Validation began on 2026-10-10. Version 0.1.0 integration checks completed on 2026-10-11; the VMD integration in version 0.2.0 was checked on 2026-10-19. This record concerns technical integration, not scientific acceptance.
 
-## Automated checks
+## Version 0.2.0: VESTA/VMD routing and execution
+
+The complete suite passed **142 tests** in Python 3.12: 35 coordinator, 18
+fake-planner boundary, 33 existing adapter, 35 VMD adapter, 9 VMD
+runtime/integrity and 12 extension tests. New checks cover source and bundled
+input hashes, Tcl/raster/native-manifest integrity, image counts/dimensions,
+lexical environment paths, native runtime and vendor drift on resume,
+explicit renderer policy, bounded nested timeouts and missing-native outcomes.
+
+A real macOS arm64 workflow using separately installed **VMD 1.9.4a57** completed
+three independent stages: portable scene compilation, native rendering of an
+original six-atom geometry fixture, and independent offline viewer generation.
+The native image was decoded and checked at **800 × 600 pixels, 300 dpi**;
+the actual image was visually inspected and remained unclipped. Technical
+completion did not change pending scientific acceptance or human approval.
+
+A second real run deliberately configured an unavailable native VMD path.
+Portable compilation and viewer creation completed; the native render stage
+was **blocked**, retained the verified portable scene and exported no `figure`
+artifact. The new runnable three-frame water example also completed both
+portable and independent-viewer stages. Those frames are prescribed rigid
+translations, not a propagated molecular-dynamics trajectory.
+
+Two independent **real Codex read-only planner** checks, one attempt each,
+returned ready typed plans:
+
+| Scientific request | Selected route and observed planning evidence |
+| --- | --- |
+| Periodic crystal, coordination polyhedra and (100) plane; default export allowed for routing test | `vesta-figure-maker.render`, absolute source CIF, scale 4; choice/reason recorded; requested scientific display configuration and approval left pending. |
+| Original illustrative coordinate trajectory, loaded frames 0/5/11, shared camera/scale | `vmd-figure-studio.render`, inline source schema validated, absolute original XYZ, exact frame selection and explicit fixed physical camera; no invented MD time or scientific approval. |
+
+These returned plans were inspected, not executed by the forward tester.
+The separate native adapter workflow above provides execution evidence.
+Raw logs retain harmless missing old installed-guide lookups and ephemeral
+collaboration warnings; both planner invocations completed within their
+original limits. The source/wheel planner now identifies its own resource root
+and uses its embedded contract when a separate guide is unavailable.
+
+Browser/WebGL interaction was not tested. The independent viewer's complete
+local data/library bundle, source hashes, field display parameters and library
+provenance were verified; HTML generation is not a browser visual-acceptance
+claim. New native integration coverage is deliberately bounded, rather than
+claiming all VMD producers or operating systems. The source VMD Skill maintains
+its broader format-specific tests and scientific conventions.
+
+## Historical 0.1.0 automated checks
 
 The test suite passed 91 cases: 35 coordinator/state/evidence tests, 11 planner subprocess contract tests, 33 adapter/molecular-handoff tests and 12 extension-registration/execution tests. The coordinator uses Python's standard library; running the complete test suite also requires pytest, NumPy and RDKit in the existing force-field development runtime.
 

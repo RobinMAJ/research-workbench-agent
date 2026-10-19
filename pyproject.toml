@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "research-workbench-agent"
-version = "0.1.0"
+version = "0.2.0"
 description = "An extensible Codex research agent with audited structure, force-field and visualization workflows."
 readme = "README.md"
 requires-python = ">=3.11"

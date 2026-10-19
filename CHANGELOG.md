@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.2.0 — 2026-10-19
+
+- Integrate VMD Figure Studio with deterministic portable compilation, native rendering and independent offline preview adapters.
+- Choose VESTA or VMD in Agent/planner reasoning according to the scientific view, explicit user preferences and discovered readiness.
+- Preserve inline scene dependencies, native/image hashes, pending visual/scientific gates and blocked missing-runtime outcomes.
+- Fingerprint VMD executables, Python paths and bundled viewer assets for conservative resume verification.
+- Document four source Skills, renderer selection, installation, extensions and use without native VMD.
+
 ## 0.1.0 — 2026-10-11
 
 Initial public release.

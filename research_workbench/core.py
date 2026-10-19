@@ -214,6 +214,9 @@ def process_runner(directory: Path, stage_timeout: int, journal=None):
         write_json(prefix.with_suffix(".json"), record)
         return record
 
+    # Native renderers may own separate process groups. Adapters can reserve
+    # their native timeout/cleanup inside this outer stage deadline.
+    run.remaining_seconds = lambda: max(0.0, deadline - time.monotonic())
     return run
 
 

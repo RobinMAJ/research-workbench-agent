@@ -70,7 +70,7 @@ class Registry:
         adapter = value["adapter"]
         if adapter not in {"builtin", "instruction-only"} and not re.fullmatch(r"python:[A-Za-z_][A-Za-z0-9_]*:[A-Za-z_][A-Za-z0-9_]*", adapter):
             raise ValueError("Invalid adapter; use builtin, instruction-only or python:module:function")
-        if adapter == "builtin" and value["id"] not in {"atomistic-structure-builder", "forcefield-generator", "vesta-figure-maker", "visualization"}:
+        if adapter == "builtin" and value["id"] not in {"atomistic-structure-builder", "forcefield-generator", "vesta-figure-maker", "vmd-figure-studio", "visualization"}:
             raise ValueError("New capabilities need a declared adapter or instruction-only route")
 
     def get(self, capability: str, operation: str | None = None) -> dict:
@@ -96,9 +96,21 @@ class Registry:
         paths = [skill / "SKILL.md", skill / "requirements.txt", skill / "environment.yml"]
         if (skill / "scripts").is_dir():
             paths += [p for p in sorted((skill / "scripts").rglob("*")) if p.is_file() and p.suffix in {".py", ".sh", ".json"}]
+        if entry["skill"] == "vmd-figure-studio":
+            paths += [p for p in sorted((skill / "assets" / "vendor").rglob("*")) if p.is_file()]
         result["skill_files"] = {str(p.relative_to(skill)): sha256(p) for p in paths if p.is_file()}
         override = {"atomistic-structure-builder": "ATOMISTIC_BUILDER_PYTHON", "forcefield-generator": "FF_GENERATOR_PYTHON"}.get(entry["skill"])
         runtime = Path(os.environ[override]).expanduser().absolute() if override and os.environ.get(override) else skill / ".venv" / "bin" / "python"
+        if entry["skill"] == "vmd-figure-studio":
+            from .vmd_runtime import resolve_runtime
+            settings = resolve_runtime(skill)
+            result["visualization_runtime"] = {key: settings[key] for key in ("python_executable", "python_source", "vmd_executable", "vmd_source")}
+            if settings["vmd_executable"]:
+                result["vmd_executable_sha256"] = sha256(Path(settings["vmd_executable"]))
+            if not settings["python_executable"]:
+                result["runtime"] = "unavailable"
+                return result
+            runtime = Path(settings["python_executable"])
         result["runtime"] = str(runtime) if runtime.exists() else "python3"
         if runtime.is_file():
             result["runtime_sha256"] = sha256(runtime.resolve())

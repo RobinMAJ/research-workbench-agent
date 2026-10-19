@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "vmd-figure-studio",
+  "version": "1.0.0",
+  "skill": "vmd-figure-studio",
+  "adapter": "builtin",
+  "description": "Compile explicit portable VMD scenes, render native structures/trajectories/scalar fields, or create an independent offline 3Dmol inspection bundle without local VMD.",
+  "operations": ["compile", "render", "viewer"],
+  "side_effects": ["local_file_write", "local_subprocess"],
+  "limits": {
+    "max_timeout_seconds": 3600,
+    "max_scene_inputs": 128,
+    "max_images": 10000,
+    "native_render_requires": "A separately licensed installed VMD executable and a compatible VMD Figure Studio Python runtime.",
+    "scene_contract": "Inline declarative spec only. Every structure, topology, trajectory and scalar-field input is an explicit absolute inputs[].path or coordinator artifact reference. Scene JSON filenames are not accepted.",
+    "without_vmd": "compile succeeds with compiled_unrendered; render is blocked while retaining a verified portable scene; viewer creates an independent 3Dmol preview and does not imply native VMD rendering.",
+    "scientific_boundary": "Technical completion never establishes electronic-structure validity, force-field validity, visual approval, browser WebGL acceptance or publication acceptance. Preserve scalar units, signs, frame choices and scientific provenance."
+  },
+  "parameters": {
+    "compile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spec"],
+      "properties": {
+        "spec": {"type": "object", "description": "Inline native VMD Figure Studio scene object. Use explicit source paths/artifact references in inputs[].path; keep original scalar units and atom ordering."},
+        "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 3600, "description": "Further capped by the coordinator stage deadline."}
+      }
+    },
+    "render": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["spec"],
+      "properties": {
+        "spec": {"type": "object", "description": "Inline native VMD Figure Studio scene with all dependencies explicit. Local VMD required for native rasters; unavailable VMD retains a compiled bundle and blocks rendering."},
+        "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 3600, "description": "Further capped by the coordinator stage deadline."}
+      }
+    },
+    "viewer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["input"],
+      "properties": {
+        "input": {"type": "string", "format": "absolute-file-path", "description": "Explicit coordinator-resolved coordinates or artifact reference; binary trajectories require an explicit coordinate conversion before this operation."},
+        "input_format": {"type": "string", "enum": ["xyz", "pdb", "gro", "sdf", "mol2", "cif", "vasp"], "default": "xyz"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 500},
+        "volumes": {
+          "type": "array", "maxItems": 32,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["path", "format", "isovalue", "units", "signed"],
+            "properties": {
+              "path": {"type": "string", "format": "absolute-file-path", "description": "Explicit previously aligned field path or coordinator artifact reference."},
+              "format": {"type": "string", "enum": ["cube", "dx"]},
+              "isovalue": {"type": "number", "exclusiveMinimum": 0},
+              "units": {"type": "string", "minLength": 1, "maxLength": 100},
+              "signed": {"type": "boolean"}
+            }
+          }
+        },
+        "timeout_seconds": {"type": "integer", "minimum": 1, "maximum": 3600}
+      }
+    }
+  }
+}

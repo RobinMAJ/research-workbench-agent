@@ -18,6 +18,8 @@ def exit_status(manifest):
 
 
 def doctor(registry, skills_root):
+    from .vmd_runtime import visualizer_readiness
+    visualizers = visualizer_readiness(skills_root)
     entries = []
     for entry in registry.catalog():
         skill = skills_root / entry["skill"] if entry["skill"] else None
@@ -29,6 +31,10 @@ def doctor(registry, skills_root):
             item["runtime"] = str(runtime)
         if entry["id"] == "vesta-figure-maker":
             item["native_app_available"] = Path("/Applications/VESTA.app").is_dir()
+        if entry["id"] == "vmd-figure-studio":
+            readiness = visualizers[entry["id"]]
+            item.update({key: readiness[key] for key in ("launcher_available", "runtime_available", "native_available", "portable_compile_available", "offline_viewer_available")})
+            item["runtime"] = readiness["runtime"]
         entries.append(item)
     try:
         codex = codex_binary()

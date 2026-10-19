@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "title": "Portable VMD scene and independent offline water preview",
+  "steps": [
+    {
+      "id": "portable_scene",
+      "capability": "vmd-figure-studio",
+      "operation": "compile",
+      "depends_on": [],
+      "params": {
+        "spec": {
+          "schema": "vmd-figure-studio-scene-v1",
+          "title": "Original illustrative rigid-water frames, not MD",
+          "inputs": [
+            {
+              "path": "../data/illustrative-water.xyz",
+              "type": "xyz",
+              "role": "structure",
+              "expected_atoms": 3
+            }
+          ],
+          "atom_elements": [
+            "O",
+            "H",
+            "H"
+          ],
+          "representations": [
+            {
+              "style": "CPK",
+              "parameters": [
+                0.65,
+                0.16,
+                24,
+                24
+              ]
+            }
+          ],
+          "camera": {
+            "center": [
+              0.35,
+              0.35,
+              0
+            ],
+            "height": 4,
+            "rotation_deg": [
+              15,
+              20,
+              0
+            ]
+          },
+          "animation": {
+            "frames": [
+              0,
+              1,
+              2
+            ]
+          },
+          "output": {
+            "width_px": 1000,
+            "height_px": 750,
+            "dpi": 300,
+            "format": "png"
+          },
+          "provenance": {
+            "data_class": "Original prescribed-coordinate fixture, not MD or optimized geometry",
+            "source": "examples/data/README.md"
+          }
+        }
+      },
+      "timeout_seconds": 120
+    },
+    {
+      "id": "independent_preview",
+      "capability": "vmd-figure-studio",
+      "operation": "viewer",
+      "depends_on": [],
+      "params": {
+        "input": "../data/illustrative-water.xyz",
+        "input_format": "xyz",
+        "title": "Prescribed water frames \u2014 illustrative fixture"
+      },
+      "timeout_seconds": 120
+    }
+  ]
+}

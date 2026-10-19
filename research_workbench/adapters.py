@@ -16,6 +16,7 @@ OPERATIONS = {
     "atomistic-structure-builder": {"build", "audit", "mp-fetch", "mp-select"},
     "forcefield-generator": {"prepare", "generate", "audit", "audit-mixture", "handoff"},
     "vesta-figure-maker": {"render"},
+    "vmd-figure-studio": {"compile", "render", "viewer"},
     "visualization": {"collect"},
 }
 
@@ -450,6 +451,9 @@ def execute(capability: str, operation: str, params: dict, output_dir: Path, ski
             return _collect(params)
         if capability == "vesta-figure-maker":
             return _vesta(params, output, skills, run_process)
+        if capability == "vmd-figure-studio":
+            from .vmd_adapter import execute_vmd
+            return execute_vmd(operation, params, output, skills, run_process)
         if operation == "handoff":
             return _handoff(params, output, skills, run_process)
         return _skill_request(capability, operation, params, output, skills, run_process)
