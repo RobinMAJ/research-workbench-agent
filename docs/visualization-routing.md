@@ -40,6 +40,23 @@ may select an available, scientifically suitable alternative within the
 authorized task and explain the change. If representation or physical meaning
 would change, ask for the missing scientific choice instead.
 
+## VESTA default display
+
+Open the original POSCAR/CONTCAR, CIF or PDB directly in VESTA. Unless the user
+explicitly requests a display change, keep the built-in element colors and radii,
+ball-and-stick proportions, bond rules/thickness, and unit-cell/periodic display.
+Do not infer permission to restyle a structure from "publication-ready" or
+"Nature-style", borrow an unrelated `.vesta` template, or replace a periodic
+slab with `MOLECULE`/a dummy cell for appearance. If the user supplies a `.vesta`
+scene, preserve its intended style instead of resetting it.
+
+Camera rotation, framing/zoom and export resolution may be adjusted and
+disclosed without changing the structure or display style. Retain the original
+input and, when available, a scene saved by VESTA itself. A hand-authored scene
+is not a prerequisite for a default native structure export. Any requested
+change to colors, radii, bonds or periodic drawing boundaries must be explicit
+and recorded separately from the underlying calculation input.
+
 ## Installed dependencies
 
 Research Workbench coordinates separately installed source Skills; it does not
@@ -74,9 +91,12 @@ application. Python and Tcl alone do not replace VMD's native renderer.
 }
 ```
 
-The `scene` is an existing local CIF/POSCAR or embedded VESTA file. The adapter
-retains native export and image-integrity evidence. A default structure export
+The `scene` is an existing local POSCAR/CONTCAR, CIF, VASP or embedded VESTA file.
+Use the original coordinate file for a default display, not a restyled template.
+The adapter retains native export and image-integrity evidence. A default structure export
 does not by itself establish a polished or approved publication figure.
+PDB uses the source VESTA Skill's native route; this typed adapter does not
+currently accept PDB, so do not claim that it does.
 
 ### VMD portable scene or native render
 

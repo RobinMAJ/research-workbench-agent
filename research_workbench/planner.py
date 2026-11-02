@@ -90,7 +90,9 @@ audit: {{"input":path,"slab":true,"min_vacuum":12}};
 mp-fetch: {{"query":native_query}}; mp-select: {{"source_manifest":path,"material_id":"mp-id","reason":"selection evidence"}}.
 forcefield-generator.prepare/generate/audit/audit-mixture: {{"spec":native_request}};
 handoff: {{"graph_sdf":explicit_H_single_3D_SDF,"geometry":path,"atom_map":path}}.
-vesta-figure-maker.render: {{"scene":local_CIF_POSCAR_or_embedded_VESTA,"scale":4}}.
+vesta-figure-maker.render: {{"scene":original_POSCAR_CONTCAR_CIF_VASP_or_user_supplied_embedded_VESTA,"scale":4}}.
+PDB uses the source VESTA Skill's native route; this typed adapter does not
+currently accept PDB, so do not claim that it does.
 vmd-figure-studio.compile/render: {{"spec":INLINE_native_VMD_scene_JSON,"timeout_seconds":600}};
 the timeout_seconds parameter is optional and is capped by the stage deadline.
 Use the installed VMD Skill's scene schema, with original input paths nested under
@@ -121,6 +123,15 @@ quantity, units, sign, isovalue and reference conventions. Read only relevant
 installed runtime metadata or already reported doctor/readiness evidence; do not
 read credentials, launch doctor or a renderer, or change configuration during
 planning. Metadata discovery does not prove a successful native export.
+For VESTA, directly use the original POSCAR/CONTCAR, CIF or PDB and preserve
+VESTA's built-in element colors/radii, ball-and-stick proportions, bond
+rules/thickness, and unit-cell/periodic display. Change those only when the user
+explicitly requests it; publication/Nature-style alone is not permission to
+restyle a structure. Do not borrow unrelated scene styling or convert a
+periodic slab to MOLECULE/a dummy cell for appearance. Preserve an explicitly
+supplied .vesta scene's intended style. Disclosed camera rotation, framing/zoom
+and export resolution are allowed without changing structure or display style.
+Do not ask a read-only planner to author a scene for a default structure export.
 If a runtime is absent, preserve explicit renderer identity, explain the missing
 dependency and choose only a route authorized by the request. VMD compile can
 prepare a portable scene without VMD; it yields scene, compiled_manifest and

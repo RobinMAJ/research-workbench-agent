@@ -24,6 +24,16 @@ For overlapping crystal density work, select by the desired representation and
 comparison rather than by file extension. Inspect runtime readiness, state the
 selected renderer and reason, and record both in planning assumptions.
 
+For VESTA, directly open the original POSCAR/CONTCAR, CIF or PDB and preserve
+VESTA's built-in display by default: element colors and radii, ball-and-stick
+proportions, bond rules/thickness, and unit-cell/periodic display. Change these
+only when the user explicitly requests the change; a publication/Nature-style
+figure request alone is not permission to restyle a structure. Do not borrow an
+unrelated scene template or turn a periodic slab into `MOLECULE`/a dummy cell for
+appearance. Preserve a user-supplied `.vesta` scene's intended style. Camera
+rotation, framing/zoom and export resolution may be adjusted and disclosed
+without changing the structure or display style.
+
 Use the VMD adapter's `compile` or `render` operation with an **inline native
 scene spec**, with original files under `inputs[].path`. The read-only planner
 must not create scene files. `compile` yields a portable scene and manifests;
